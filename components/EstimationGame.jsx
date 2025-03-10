@@ -1,46 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Trophy, Award, Medal } from 'lucide-react';
+import { AlertTriangle, Trophy, Award, Medal, ArrowLeft } from 'lucide-react';
 import supabase from '../lib/supabase';
+import { gameCategories } from '../data/questions';
 
-const EstimationGame = () => {
-  // Game questions
-  const questions = [
-    {
-      id: 1,
-      text: "How many troops did Switzerland mobilize at its peak during World War II?",
-      answer: 850000,
-      unit: "troops",
-      context: "Switzerland mobilized around 850,000 men at its peak during WWII. This represented about 20% of the Swiss population at the time."
-    },
-    {
-      id: 2,
-      text: "How many times was Swiss airspace violated during World War II?",
-      answer: 6501,
-      unit: "violations",
-      context: "There were 6,501 recorded airspace violations during the war. In response, Swiss fighter planes shot down 11 German aircraft."
-    },
-    {
-      id: 3,
-      text: "How many refugees did Switzerland accept during World War II?",
-      answer: 295000,
-      unit: "refugees",
-      context: "Switzerland provided asylum to around 295,000 refugees during WWII, but also turned away many others, particularly Jewish refugees."
-    },
-    {
-      id: 4,
-      text: "What was the total weight (in tons) of bombs accidentally dropped on Switzerland by Allied bombers?",
-      answer: 84,
-      unit: "tons",
-      context: "About 84 tons of bombs were accidentally dropped on Swiss territory by Allied aircraft, primarily due to navigation errors."
-    },
-    {
-      id: 5,
-      text: "How many Swiss citizens were held in Nazi concentration camps?",
-      answer: 1000,
-      unit: "citizens",
-      context: "Approximately 1,000 Swiss citizens were detained in Nazi concentration camps, many of whom were dual nationals or ethnic Jews."
-    }
-  ];
+const EstimationGame = ({ categoryId, gameId, onBackToSelection }) => {
+  // Find the selected game questions
+  const category = gameCategories.find(c => c.id === categoryId);
+  const game = category?.games.find(g => g.id === gameId);
+  const questions = game?.questions || [];
+  const gameName = game?.name || 'Estimation Game';
 
   // Basic game state
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -58,7 +26,7 @@ const EstimationGame = () => {
   const [confidenceLevel, setConfidenceLevel] = useState(80);
   const [inputError, setInputError] = useState('');
 
-  // Fetch leaderboard from Supabase on component mount
+  // Fetch leaderboard from Supabase on mount
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
@@ -66,6 +34,8 @@ const EstimationGame = () => {
         const { data, error } = await supabase
           .from('leaderboard')
           .select('*')
+          .eq('categoryId', categoryId)
+          .eq('gameId', gameId)
           .order('score', { ascending: false })
           .limit(10);
           
@@ -79,7 +49,7 @@ const EstimationGame = () => {
           // Use default leaderboard if no data
           setLeaderboard([
             { name: "History Buff", score: 482, date: "2025-02-20", correctAnswers: 5, totalQuestions: 5 },
-            { name: "Swiss Expert", score: 375, date: "2025-02-18", correctAnswers: 4, totalQuestions: 5 },
+            { name: "Expert", score: 375, date: "2025-02-18", correctAnswers: 4, totalQuestions: 5 },
             { name: "Neutral Player", score: 289, date: "2025-02-15", correctAnswers: 3, totalQuestions: 5 }
           ]);
         }
@@ -89,7 +59,7 @@ const EstimationGame = () => {
         // Set default leaderboard if there's an error
         setLeaderboard([
           { name: "History Buff", score: 482, date: "2025-02-20", correctAnswers: 5, totalQuestions: 5 },
-          { name: "Swiss Expert", score: 375, date: "2025-02-18", correctAnswers: 4, totalQuestions: 5 },
+          { name: "Expert", score: 375, date: "2025-02-18", correctAnswers: 4, totalQuestions: 5 },
           { name: "Neutral Player", score: 289, date: "2025-02-15", correctAnswers: 3, totalQuestions: 5 }
         ]);
       } finally {
@@ -98,7 +68,7 @@ const EstimationGame = () => {
     };
     
     fetchLeaderboard();
-  }, []);
+  }, [categoryId, gameId]);
 
   // Reset inputs when moving to a new question
   useEffect(() => {
@@ -117,13 +87,15 @@ const EstimationGame = () => {
     try {
       setIsLoading(true);
       
-      // Create new leaderboard entry
+      // Create new leaderboard entry with category and game info
       const newEntry = {
         name: playerName.trim(),
         score: score,
         date: new Date().toISOString(),
         correctAnswers: answers.filter(a => a.isCorrect).length,
-        totalQuestions: questions.length
+        totalQuestions: questions.length,
+        categoryId: categoryId,
+        gameId: gameId
       };
       
       // Insert the new entry into Supabase
@@ -135,10 +107,12 @@ const EstimationGame = () => {
         throw insertError;
       }
       
-      // Fetch the updated leaderboard
+      // Fetch the updated leaderboard for this specific game
       const { data, error: fetchError } = await supabase
         .from('leaderboard')
         .select('*')
+        .eq('categoryId', categoryId)
+        .eq('gameId', gameId)
         .order('score', { ascending: false })
         .limit(10);
         
@@ -191,7 +165,8 @@ const EstimationGame = () => {
       }
       
       // Get question and actual answer
-      const actualValue = questions[currentQuestionIndex].answer;
+      const currentQuestion = questions[currentQuestionIndex];
+      const actualValue = currentQuestion.answer;
       
       // Check if estimate is correct (actual value is within bounds)
       const isCorrect = low <= actualValue && actualValue <= high;
@@ -277,14 +252,15 @@ const EstimationGame = () => {
       
       // Create answer record
       const answerRecord = {
-        questionId: questions[currentQuestionIndex].id,
-        question: questions[currentQuestionIndex].text,
+        questionId: currentQuestion.id,
+        question: currentQuestion.text,
         lowerBound: low,
         upperBound: high,
         confidenceLevel,
         actualValue,
         isCorrect,
-        pointsEarned
+        pointsEarned,
+        unit: currentQuestion.unit
       };
       
       // Update game state
@@ -323,6 +299,22 @@ const EstimationGame = () => {
   
   // Render the question stage
   const renderQuestionStage = () => {
+    if (!questions || questions.length === 0) {
+      return (
+        <div className="text-center p-4">
+          <p>No questions available. Please go back and select another game.</p>
+          <button 
+            onClick={onBackToSelection}
+            className="mt-4 bg-blue-600 text-white py-2 px-4 rounded-md"
+          >
+            Back to Game Selection
+          </button>
+        </div>
+      );
+    }
+    
+    const currentQuestion = questions[currentQuestionIndex];
+    
     return (
       <div className="space-y-6">
         <div className="text-center mb-6">
@@ -331,13 +323,13 @@ const EstimationGame = () => {
           </span>
         </div>
         
-        <h2 className="text-xl font-bold mb-4">{questions[currentQuestionIndex].text}</h2>
+        <h2 className="text-xl font-bold mb-4">{currentQuestion.text}</h2>
         
         <div className="space-y-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium mb-1">
-                Lower Bound ({questions[currentQuestionIndex].unit})
+                Lower Bound ({currentQuestion.unit})
               </label>
               <input 
                 type="number" 
@@ -349,7 +341,7 @@ const EstimationGame = () => {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">
-                Upper Bound ({questions[currentQuestionIndex].unit})
+                Upper Bound ({currentQuestion.unit})
               </label>
               <input 
                 type="number" 
@@ -667,11 +659,11 @@ const EstimationGame = () => {
                 <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
                   <div>
                     <p className="text-gray-500">Your estimate:</p>
-                    <p>{answer.lowerBound} - {answer.upperBound}</p>
+                    <p>{answer.lowerBound} - {answer.upperBound} {answer.unit}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Actual value:</p>
-                    <p className="font-medium">{answer.actualValue.toLocaleString()}</p>
+                    <p className="font-medium">{answer.actualValue.toLocaleString()} {answer.unit}</p>
                   </div>
                 </div>
                 <div className="mt-1 text-sm">
@@ -685,13 +677,21 @@ const EstimationGame = () => {
           })}
         </div>
         
-        <div className="pt-4">
+        <div className="flex gap-4 pt-4">
           <button 
             type="button"
             onClick={handleRestart} 
-            className="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 transition cursor-pointer"
+            className="flex-1 bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 transition cursor-pointer"
           >
             Play Again
+          </button>
+          
+          <button 
+            type="button"
+            onClick={onBackToSelection} 
+            className="flex-1 bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-md hover:bg-gray-300 transition cursor-pointer"
+          >
+            Try Another Game
           </button>
         </div>
       </div>
@@ -719,12 +719,20 @@ const EstimationGame = () => {
         <div className="p-4 bg-red-50 text-red-700 rounded-md">
           <h3 className="font-bold">Something went wrong</h3>
           <p>There was an error rendering the game. Please try refreshing the page.</p>
-          <button 
-            onClick={handleRestart}
-            className="mt-4 bg-red-600 text-white px-4 py-2 rounded-md"
-          >
-            Restart Game
-          </button>
+          <div className="flex gap-2 mt-4">
+            <button 
+              onClick={handleRestart}
+              className="px-4 py-2 rounded-md bg-red-600 text-white"
+            >
+              Restart Game
+            </button>
+            <button 
+              onClick={onBackToSelection}
+              className="px-4 py-2 rounded-md bg-gray-600 text-white"
+            >
+              Back to Selection
+            </button>
+          </div>
         </div>
       );
     }
@@ -733,8 +741,15 @@ const EstimationGame = () => {
   // Main render
   return (
     <div className="max-w-lg mx-auto p-4">
-      <header className="text-center mb-8">
-        <h1 className="text-2xl font-bold mb-2">Switzerland in WWII</h1>
+      <header className="text-center mb-8 relative">
+        <button 
+          onClick={onBackToSelection}
+          className="absolute left-0 top-1 p-2 text-gray-600 hover:text-gray-900 flex items-center"
+        >
+          <ArrowLeft size={16} className="mr-1" />
+          <span>Back</span>
+        </button>
+        <h1 className="text-2xl font-bold mb-2">{gameName}</h1>
         <p className="text-gray-600">Test your knowledge with this estimation game</p>
       </header>
       
