@@ -3,8 +3,10 @@ import { gameCategories } from '../data/questions';
 import { Trophy, Star, Calendar, Clock, Lock } from 'lucide-react';
 
 const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
-  // State for countdown timers
-  const [countdowns, setCountdowns] = useState({});
+  // States for dynamic game status
+  const [gameStatuses, setGameStatuses] = useState({}); // Tracks availability and featured status
+  const [countdown, setCountdown] = useState(null); // For the next game preview
+  const [nextUpcomingGame, setNextUpcomingGame] = useState(null); // The next game to be released
   
   // Function to format date as "Month Day"
   const formatDate = (dateString) => {
@@ -13,48 +15,82 @@ const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   };
   
-  // Initialize and update countdown timers
+  // Initialize and manage game statuses
   useEffect(() => {
-    const updateCountdowns = () => {
+    const updateGameStatuses = () => {
       const now = new Date();
-      const newCountdowns = {};
+      const statuses = {};
+      let upcomingGames = [];
       
+      // First pass - determine basic statuses and collect upcoming games
       gameCategories.forEach(category => {
         category.games.forEach(game => {
-          if (game.comingSoon && game.releaseDate) {
-            const releaseDate = new Date(game.releaseDate);
-            const timeRemaining = releaseDate - now;
+          const gameKey = `${category.id}-${game.id}`;
+          
+          if (game.scheduledRelease) {
+            const releaseDate = new Date(game.scheduledRelease);
+            const isReleased = now >= releaseDate;
             
-            if (timeRemaining > 0) {
-              // Calculate hours, minutes, seconds
-              const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
-              const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-              const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-              
-              newCountdowns[`${category.id}-${game.id}`] = {
-                hours,
-                minutes,
-                seconds,
-                expired: false
-              };
-            } else {
-              newCountdowns[`${category.id}-${game.id}`] = {
-                hours: 0,
-                minutes: 0,
-                seconds: 0,
-                expired: true
-              };
+            statuses[gameKey] = {
+              available: isReleased,
+              // All released scheduled games become featured
+              featured: isReleased
+            };
+            
+            // If not released yet, add to upcoming games list
+            if (!isReleased) {
+              upcomingGames.push({
+                categoryId: category.id,
+                gameId: game.id,
+                game: game,
+                releaseDate: releaseDate,
+                // Time until release in milliseconds
+                timeUntilRelease: releaseDate - now
+              });
             }
+          } else {
+            // Regular game without scheduled release
+            statuses[gameKey] = {
+              available: true,
+              featured: !!game.featured && 
+                // Check if the game has a featured until date
+                (!game.scheduledFeaturedUntil || 
+                now < new Date(game.scheduledFeaturedUntil))
+            };
           }
         });
       });
       
-      setCountdowns(newCountdowns);
+      // Sort upcoming games by release date (earliest first)
+      upcomingGames.sort((a, b) => a.timeUntilRelease - b.timeUntilRelease);
+      
+      // Set the next upcoming game (if any)
+      const nextGame = upcomingGames.length > 0 ? upcomingGames[0] : null;
+      setNextUpcomingGame(nextGame);
+      
+      // Calculate countdown for the next upcoming game
+      if (nextGame) {
+        const timeRemaining = nextGame.timeUntilRelease;
+        const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+        const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+        
+        setCountdown({
+          hours,
+          minutes,
+          seconds
+        });
+      } else {
+        setCountdown(null);
+      }
+      
+      // Update all game statuses
+      setGameStatuses(statuses);
     };
     
     // Update immediately and then every second
-    updateCountdowns();
-    const interval = setInterval(updateCountdowns, 1000);
+    updateGameStatuses();
+    const interval = setInterval(updateGameStatuses, 1000);
     
     return () => clearInterval(interval);
   }, []);
@@ -85,54 +121,63 @@ const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {category.games.map((game) => {
-                const isFeaturedGame = game.featured;
-                const formattedDate = formatDate(game.addedDate);
-                const isComingSoon = game.comingSoon;
-                const countdown = countdowns[`${category.id}-${game.id}`];
+                const gameKey = `${category.id}-${game.id}`;
+                const status = gameStatuses[gameKey] || { available: true, featured: !!game.featured };
+                const isAvailable = status.available;
+                const isFeatured = status.featured;
+                
+                // Coming soon preview - only show if it's the next upcoming game
+                const isComingSoonPreview = 
+                  nextUpcomingGame && 
+                  nextUpcomingGame.categoryId === category.id && 
+                  nextUpcomingGame.gameId === game.id;
+                
+                // Only render the game if it's available or it's the next upcoming game
+                if (!isAvailable && !isComingSoonPreview) {
+                  return null; // Don't show unavailable games except the next preview
+                }
                 
                 return (
                   <div 
                     key={game.id} 
                     className={`border rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden relative 
-                      ${isFeaturedGame ? 'border-2 border-yellow-400 shadow-md' : ''}
-                      ${isComingSoon ? 'border-2 border-purple-400 shadow-md' : ''}`}
+                      ${isFeatured ? 'border-2 border-yellow-400 shadow-md' : ''}
+                      ${isComingSoonPreview ? 'border-2 border-purple-400 shadow-md' : ''}`}
                   >
                     {/* Badge for game status */}
-                    {(isFeaturedGame || formattedDate || isComingSoon) && (
-                      <div className={`absolute -top-1 -right-1 text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-lg flex items-center ${
-                        isFeaturedGame ? 'bg-yellow-400 text-yellow-800' : 
-                        isComingSoon ? 'bg-purple-400 text-purple-900' : 'bg-gray-200 text-gray-700'
-                      }`}>
-                        {isFeaturedGame ? (
-                          <>
-                            <Star size={12} className="mr-1" fill="currentColor" />
-                            <span>Game of the Day</span>
-                          </>
-                        ) : isComingSoon ? (
-                          <>
-                            <Clock size={12} className="mr-1" />
-                            <span>Coming Soon</span>
-                          </>
-                        ) : (
-                          <>
-                            <Calendar size={12} className="mr-1" />
-                            <span>{formattedDate}</span>
-                          </>
-                        )}
-                      </div>
-                    )}
+                    <div className={`absolute -top-1 -right-1 text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-lg flex items-center ${
+                      isFeatured ? 'bg-yellow-400 text-yellow-800' : 
+                      isComingSoonPreview ? 'bg-purple-400 text-purple-900' : 'bg-gray-200 text-gray-700'
+                    }`}>
+                      {isFeatured ? (
+                        <>
+                          <Star size={12} className="mr-1" fill="currentColor" />
+                          <span>Game of the Day</span>
+                        </>
+                      ) : isComingSoonPreview ? (
+                        <>
+                          <Clock size={12} className="mr-1" />
+                          <span>Coming Soon</span>
+                        </>
+                      ) : (
+                        <>
+                          <Calendar size={12} className="mr-1" />
+                          <span>{formatDate(game.addedDate)}</span>
+                        </>
+                      )}
+                    </div>
                     
                     <div className={`p-5 ${
-                      isFeaturedGame ? 'bg-yellow-50' : 
-                      isComingSoon ? 'bg-purple-50' : ''
+                      isFeatured ? 'bg-yellow-50' : 
+                      isComingSoonPreview ? 'bg-purple-50' : ''
                     }`}>
                       <h3 className="text-xl font-semibold mb-2">{game.name}</h3>
                       <p className="text-gray-600 mb-4">{game.description}</p>
                       
-                      {/* Display countdown for coming soon games */}
-                      {isComingSoon && countdown && (
+                      {/* Display countdown for coming soon preview */}
+                      {isComingSoonPreview && countdown && (
                         <div className="mb-4 bg-purple-100 p-3 rounded-md">
-                          <p className="font-medium text-purple-900 mb-1">Available in:</p>
+                          <p className="font-medium text-purple-900 mb-1">Coming as Game of the Day in:</p>
                           <div className="grid grid-cols-3 gap-2 text-center">
                             <div className="bg-white rounded p-2">
                               <span className="text-xl font-bold text-purple-800">{String(countdown.hours).padStart(2, '0')}</span>
@@ -161,7 +206,7 @@ const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
                             Leaderboard
                           </button>
                           
-                          {isComingSoon ? (
+                          {!isAvailable ? (
                             <button
                               disabled
                               className="flex items-center bg-gray-300 text-gray-500 px-4 py-2 rounded-md text-sm cursor-not-allowed"
@@ -173,8 +218,8 @@ const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
                             <button
                               onClick={() => onSelectGame(category.id, game.id)}
                               className={`text-white px-4 py-2 rounded-md text-sm transition ${
-                                isFeaturedGame 
-                                  ? 'bg-yellow-600 hover:bg-yellow-700' 
+                                isFeatured 
+                                  ? 'bg-yellow-600 hover:bg-yellow-700'
                                   : 'bg-blue-600 hover:bg-blue-700'
                               }`}
                             >
