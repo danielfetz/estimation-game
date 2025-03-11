@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { gameCategories } from '../data/questions';
-import { Trophy, Star, Calendar, Clock, Lock, Users } from 'lucide-react';
+import { Trophy, Star, Calendar, Clock, Lock, Users, HelpCircle } from 'lucide-react';
 import supabase from '../lib/supabase';
 
 const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
@@ -259,25 +259,34 @@ const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
                         </div>
                       )}
                       
-                      {/* Display player count for featured game */}
-                      {isFeatured && (
-                        <div className="mb-4 bg-yellow-100 p-3 rounded-md">
-                          <p className="font-medium text-yellow-900 mb-1">Players Today:</p>
-                          <div className="flex justify-center items-center">
-                            <div className="bg-white rounded p-2 px-6">
-                              <span className="text-xl font-bold text-yellow-800">
-                                {loading ? '...' : playerCount}
-                              </span>
-                              <div className="flex items-center justify-center mt-1">
-                                <Users size={14} className="text-yellow-600 mr-1" />
-                                <p className="text-xs text-yellow-600">
-                                  {playerCount === 1 ? 'Player' : 'Players'}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+{/* Display player count for featured game */}
+{isFeatured && (
+  <div className="mb-4 bg-yellow-100 p-3 rounded-md">
+    <p className="font-medium text-yellow-900 mb-1">Game Stats:</p>
+    <div className="grid grid-cols-2 gap-2 text-center">
+      <div className="bg-white rounded p-2">
+        <span className="text-xl font-bold text-yellow-800">
+          {loading ? '...' : playerCount}
+        </span>
+        <div className="flex items-center justify-center mt-1">
+          <Users size={14} className="text-yellow-600 mr-1" />
+          <p className="text-xs text-yellow-600">
+            {playerCount === 1 ? 'Player' : 'Players'}
+          </p>
+        </div>
+      </div>
+      <div className="bg-white rounded p-2">
+        <span className="text-xl font-bold text-yellow-800">
+          {game.questions.length}
+        </span>
+        <div className="flex items-center justify-center mt-1">
+          <HelpCircle size={14} className="text-yellow-600 mr-1" />
+          <p className="text-xs text-yellow-600">Questions</p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
                       
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-500">{game.questions.length} questions</span>
