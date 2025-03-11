@@ -10,7 +10,8 @@ export const gameCategories = [
         name: 'Switzerland in WWII',
         description: 'Estimate key statistics about neutral Switzerland during World War II',
         addedDate: '2025-03-11',
-        featured: true, // This is the "Game of the Day"
+        featured: true, // Currently the Game of the Day
+        scheduledFeaturedUntil: '2025-03-12T09:00:00Z', // Will be featured until this date
         questions: [
           {
             id: 1,
@@ -96,8 +97,7 @@ export const gameCategories = [
         id: 'liechtenstein-ww2',
         name: 'Liechtenstein in WWII',
         description: 'Explore the unique position of this tiny principality during World War II',
-        comingSoon: true, // Flag to indicate this game isn't playable yet
-        releaseDate: '2025-03-12T09:00:00Z', // Released tomorrow at 9am UTC
+        scheduledRelease: '2025-03-12T09:00:00Z', // Will be released at this time
         addedDate: '2025-03-12',
         questions: [
           {
@@ -134,6 +134,50 @@ export const gameCategories = [
             answer: 239,
             unit: "people",
             context: "Records show that 239 Liechtenstein citizens or residents joined the Nazi Party, representing about 2% of the population at that time."
+          }
+        ]
+      },
+      {
+        id: 'italy-ww2',
+        name: 'Italy in WWII',
+        description: 'Explore key statistics about Italy during World War II',
+        scheduledRelease: '2025-03-13T09:00:00Z', // Released the day after Liechtenstein
+        addedDate: '2025-03-13',
+        questions: [
+          {
+            id: 1,
+            text: "How many Italian soldiers were captured as prisoners of war during WWII?",
+            answer: 1350000,
+            unit: "soldiers",
+            context: "Approximately 1.35 million Italian soldiers were captured as prisoners of war during World War II."
+          },
+          {
+            id: 2,
+            text: "How many Italian civilians died during World War II?",
+            answer: 153000,
+            unit: "people",
+            context: "Around 153,000 Italian civilians lost their lives during World War II, from various causes including bombing, massacres, and privation."
+          },
+          {
+            id: 3,
+            text: "What was the total number of Italian military deaths in World War II?",
+            answer: 319000,
+            unit: "soldiers",
+            context: "Italy suffered approximately 319,000 military deaths during World War II, across all theaters of operation."
+          },
+          {
+            id: 4,
+            text: "How many aircraft did the Italian air force (Regia Aeronautica) have at its peak during WWII?",
+            answer: 3800,
+            unit: "aircraft",
+            context: "The Italian air force had around 3,800 aircraft at its peak strength, though many were obsolete designs compared to other nations."
+          },
+          {
+            id: 5,
+            text: "How many Italian Jews were deported to concentration camps after the German occupation in 1943?",
+            answer: 8800,
+            unit: "people",
+            context: "Approximately 8,800 Italian Jews were deported to Nazi concentration camps after Germany occupied northern Italy in 1943."
           }
         ]
       }
