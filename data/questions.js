@@ -89,5 +89,54 @@ export const gameCategories = [
         ]
       }
     ]
+  },
+  {
+    id: 'microstates',
+    name: 'Micro States',
+    description: 'Test your knowledge about some of the smallest countries in the world',
+    games: [
+      {
+        id: 'liechtenstein',
+        name: 'Liechtenstein Facts',
+        description: 'Estimate key statistics about the principality of Liechtenstein',
+        questions: [
+          {
+            id: 1,
+            text: "What is the current population of Liechtenstein?",
+            answer: 39039,
+            unit: "people",
+            context: "Liechtenstein has approximately 39,039 inhabitants, making it one of the smallest countries in Europe by population."
+          },
+          {
+            id: 2,
+            text: "What is Liechtenstein's annual GDP (in millions of USD)?",
+            answer: 6275,
+            unit: "million USD",
+            context: "Liechtenstein's GDP is around $6.275 billion, giving it one of the highest GDP per capita in the world."
+          },
+          {
+            id: 3,
+            text: "What percentage of Liechtenstein's GDP comes from financial services?",
+            answer: 27,
+            unit: "percent",
+            context: "Financial services account for approximately 27% of Liechtenstein's GDP, making it a significant part of their economy alongside manufacturing."
+          },
+          {
+            id: 4,
+            text: "What is the land area of Liechtenstein in square kilometers?",
+            answer: 160,
+            unit: "square kilometers",
+            context: "Liechtenstein covers just 160 square kilometers, making it the fourth-smallest country in Europe and the sixth-smallest in the world."
+          },
+          {
+            id: 5,
+            text: "How many municipalities (Gemeinden) does Liechtenstein have?",
+            answer: 11,
+            unit: "municipalities",
+            context: "Liechtenstein is divided into 11 municipalities (Gemeinden). The capital, Vaduz, is one of these municipalities."
+          }
+        ]
+      }
+    ]
   }
 ];
