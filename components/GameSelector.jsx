@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { gameCategories } from '../data/questions';
-import { Trophy, Star, Calendar, Clock, Lock, Users, HelpCircle } from 'lucide-react';
+import { Trophy, Star, Calendar, Clock, Lock, Mail, CheckCircle, AlertCircle } from 'lucide-react';
 import supabase from '../lib/supabase';
 
 const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
@@ -8,8 +8,11 @@ const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
   const [gameStatuses, setGameStatuses] = useState({});
   const [countdown, setCountdown] = useState(null);
   const [nextUpcomingGame, setNextUpcomingGame] = useState(null);
-  const [playerCounts, setPlayerCounts] = useState({});
-  const [loading, setLoading] = useState(true);
+  
+  // Email subscription state
+  const [email, setEmail] = useState('');
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null); // 'success', 'error', or null
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Function to format date as "Month Day"
   const formatDate = (dateString) => {
@@ -17,68 +20,45 @@ const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   };
-
-  // Fetch player counts for all games
-  useEffect(() => {
-    const fetchPlayerCounts = async () => {
-      try {
-        setLoading(true);
-        
-        // Find current featured game
-        let featuredGame = null;
-        let featuredCategory = null;
-        
-        gameCategories.forEach(category => {
-          category.games.forEach(game => {
-            if (game.featured) {
-              featuredGame = game;
-              featuredCategory = category;
-            }
-          });
-        });
-        
-        if (featuredGame) {
-          // Get today's date in ISO format without time
-          const today = new Date().toISOString().split('T')[0];
-          
-          // Fetch leaderboard entries for the featured game from today
-          const { data, error } = await supabase
-            .from('leaderboard')
-            .select('id')
-            .eq('categoryId', featuredCategory.id)
-            .eq('gameId', featuredGame.id)
-            .gte('date', today); // From today onwards
-            
-          if (error) {
-            throw error;
-          }
-          
-          // Calculate unique player count (some players might have multiple entries)
-          const uniquePlayers = new Set();
-          if (data) {
-            data.forEach(entry => uniquePlayers.add(entry.id));
-          }
-          
-          // Update player counts
-          setPlayerCounts({
-            [`${featuredCategory.id}-${featuredGame.id}`]: uniquePlayers.size || 0
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching player counts:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchPlayerCounts();
-    
-    // Refresh player counts every minute
-    const interval = setInterval(fetchPlayerCounts, 60000);
-    return () => clearInterval(interval);
-  }, []);
   
-  // Initialize and manage game statuses (countdown timer logic remains the same)
+  // Handle email subscription
+  const handleSubscribe = async () => {
+    // Basic email validation
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      setSubscriptionStatus('error');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Here you would integrate with your actual email service
+      // This is a placeholder for the actual implementation
+      // Example with Supabase:
+      const { error } = await supabase
+        .from('email_subscriptions')
+        .insert([{ email, subscribed_at: new Date() }]);
+        
+      if (error) throw error;
+      
+      // If successful
+      setSubscriptionStatus('success');
+      setEmail('');
+      
+      // Reset success message after 3 seconds
+      setTimeout(() => {
+        setSubscriptionStatus(null);
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error subscribing:', error);
+      setSubscriptionStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Initialize and manage game statuses
   useEffect(() => {
     const updateGameStatuses = () => {
       const now = new Date();
@@ -188,7 +168,6 @@ const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
                 const status = gameStatuses[gameKey] || { available: true, featured: !!game.featured };
                 const isAvailable = status.available;
                 const isFeatured = status.featured;
-                const playerCount = playerCounts[gameKey] || 0;
                 
                 // Coming soon preview - only show if it's the next upcoming game
                 const isComingSoonPreview = 
@@ -259,34 +238,48 @@ const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
                         </div>
                       )}
                       
-{/* Display player count for featured game */}
-{isFeatured && (
-  <div className="mb-4 bg-yellow-100 p-3 rounded-md">
-    <p className="font-medium text-yellow-900 mb-1">Game Stats:</p>
-    <div className="grid grid-cols-2 gap-2 text-center">
-      <div className="bg-white rounded p-2">
-        <span className="text-xl font-bold text-yellow-800">
-          {loading ? '...' : playerCount}
-        </span>
-        <div className="flex items-center justify-center mt-1">
-          <Users size={14} className="text-yellow-600 mr-1" />
-          <p className="text-xs text-yellow-600">
-            {playerCount === 1 ? 'Player' : 'Players'}
-          </p>
-        </div>
-      </div>
-      <div className="bg-white rounded p-2">
-        <span className="text-xl font-bold text-yellow-800">
-          {game.questions.length}
-        </span>
-        <div className="flex items-center justify-center mt-1">
-          <HelpCircle size={14} className="text-yellow-600 mr-1" />
-          <p className="text-xs text-yellow-600">Questions</p>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+                      {/* Email signup form for featured game */}
+                      {isFeatured && (
+                        <div className="mb-4 bg-yellow-100 p-3 rounded-md">
+                          <p className="font-medium text-yellow-900 mb-2">Never miss a new game!</p>
+                          {subscriptionStatus === 'success' ? (
+                            <div className="bg-green-100 text-green-800 p-2 rounded-md flex items-center">
+                              <CheckCircle size={16} className="mr-2" />
+                              <p className="text-sm">Thanks for subscribing!</p>
+                            </div>
+                          ) : (
+                            <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); handleSubscribe(); }}>
+                              <div className="rounded-md overflow-hidden flex flex-col border border-yellow-300">
+                                <input 
+                                  type="email" 
+                                  value={email}
+                                  onChange={(e) => setEmail(e.target.value)}
+                                  placeholder="Your email" 
+                                  className="w-full p-2 border-0 text-sm focus:ring-yellow-500 focus:outline-none"
+                                  disabled={isSubmitting}
+                                />
+                                <button 
+                                  type="submit"
+                                  className="bg-yellow-500 text-white py-2 text-sm font-medium hover:bg-yellow-600 transition w-full"
+                                  disabled={isSubmitting}
+                                >
+                                  {isSubmitting ? 'Subscribing...' : 'Subscribe'}
+                                </button>
+                              </div>
+                              {subscriptionStatus === 'error' && (
+                                <div className="text-red-600 text-xs flex items-center">
+                                  <AlertCircle size={12} className="mr-1" />
+                                  <span>Please enter a valid email address</span>
+                                </div>
+                              )}
+                              <p className="text-xs text-yellow-700 italic flex items-center">
+                                <Mail size={12} className="mr-1" />
+                                Get notified when new "Game of the Day" is released
+                              </p>
+                            </form>
+                          )}
+                        </div>
+                      )}
                       
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-500">{game.questions.length} questions</span>
