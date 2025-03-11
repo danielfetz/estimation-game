@@ -3,11 +3,14 @@ export const gameCategories = [
     id: 'ww2',
     name: 'World War II',
     description: 'Test your knowledge about different countries during World War II',
+    featured: true, // This category is featured as "Category of the Week"
     games: [
       {
         id: 'switzerland',
         name: 'Switzerland in WWII',
         description: 'Estimate key statistics about neutral Switzerland during World War II',
+        addedDate: '2025-03-11',
+        featured: true, // This is the "Game of the Day"
         questions: [
           {
             id: 1,
@@ -50,6 +53,7 @@ export const gameCategories = [
         id: 'austria',
         name: 'Austria in WWII',
         description: 'Estimate key statistics about Austria during World War II',
+        addedDate: '2025-03-10',
         questions: [
           {
             id: 1,
@@ -99,6 +103,7 @@ export const gameCategories = [
         id: 'liechtenstein',
         name: 'Liechtenstein Facts',
         description: 'Estimate key statistics about the principality of Liechtenstein',
+        addedDate: '2025-03-09',
         questions: [
           {
             id: 1,
