@@ -3,6 +3,13 @@ import { gameCategories } from '../data/questions';
 import { Trophy, Star, Calendar } from 'lucide-react';
 
 const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
+  // Function to format date as "Month Day"
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  };
+
   return (
     <div className="space-y-8">
       <header className="text-center">
@@ -11,41 +18,53 @@ const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
       </header>
       
       {gameCategories.map((category) => {
-        const isWeeklyCategory = category.id === 'ww2';
+        const isFeaturedCategory = category.featured;
         
         return (
-          <div key={category.id} className={`space-y-4 ${isWeeklyCategory ? 'border-2 border-blue-400 p-5 rounded-lg bg-blue-50' : ''}`}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold pb-2">{category.name}</h2>
-              
-              {isWeeklyCategory && (
-                <div className="flex items-center bg-blue-600 text-white text-sm px-3 py-1 rounded-full">
-                  <Calendar size={14} className="mr-1" />
-                  <span>Category of the Week</span>
-                </div>
-              )}
-            </div>
+          <div key={category.id} className={`space-y-4 ${isFeaturedCategory ? 'border-2 border-blue-400 p-5 rounded-lg relative' : ''}`}>
+            {isFeaturedCategory && (
+              <div className="absolute -top-3 right-5 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm flex items-center">
+                <Calendar size={14} className="mr-1" />
+                <span>Category of the Week</span>
+              </div>
+            )}
             
-            <p className="text-gray-700 mb-4">{category.description}</p>
+            <div className="mt-3">
+              <h2 className="text-2xl font-bold pb-2">{category.name}</h2>
+              <p className="text-gray-700 mb-4">{category.description}</p>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {category.games.map((game) => {
-                const isGameOfDay = category.id === 'ww2' && game.id === 'switzerland';
+                const isFeaturedGame = game.featured;
+                const formattedDate = formatDate(game.addedDate);
                 
                 return (
                   <div 
                     key={game.id} 
-                    className={`border rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden 
-                      ${isGameOfDay ? 'border-2 border-yellow-400 relative shadow-md' : ''}`}
+                    className={`border rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden relative 
+                      ${isFeaturedGame ? 'border-2 border-yellow-400 shadow-md' : ''}`}
                   >
-                    {isGameOfDay && (
-                      <div className="absolute -top-1 -right-1 bg-yellow-400 text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-lg flex items-center">
-                        <Star size={12} className="mr-1 text-yellow-800" fill="currentColor" />
-                        <span className="text-yellow-800">Game of the Day</span>
+                    {/* Badge for featured game or date added */}
+                    {(isFeaturedGame || formattedDate) && (
+                      <div className={`absolute -top-1 -right-1 text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-lg flex items-center ${
+                        isFeaturedGame ? 'bg-yellow-400 text-yellow-800' : 'bg-gray-200 text-gray-700'
+                      }`}>
+                        {isFeaturedGame ? (
+                          <>
+                            <Star size={12} className="mr-1" fill="currentColor" />
+                            <span>Game of the Day</span>
+                          </>
+                        ) : (
+                          <>
+                            <Calendar size={12} className="mr-1" />
+                            <span>{formattedDate}</span>
+                          </>
+                        )}
                       </div>
                     )}
                     
-                    <div className={`p-5 ${isGameOfDay ? 'bg-yellow-50' : ''}`}>
+                    <div className={`p-5 ${isFeaturedGame ? 'bg-yellow-50' : ''}`}>
                       <h3 className="text-xl font-semibold mb-2">{game.name}</h3>
                       <p className="text-gray-600 mb-4">{game.description}</p>
                       <div className="flex justify-between items-center">
@@ -62,7 +81,7 @@ const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
                           <button
                             onClick={() => onSelectGame(category.id, game.id)}
                             className={`text-white px-4 py-2 rounded-md text-sm transition ${
-                              isGameOfDay 
+                              isFeaturedGame 
                                 ? 'bg-yellow-600 hover:bg-yellow-700' 
                                 : 'bg-blue-600 hover:bg-blue-700'
                             }`}
