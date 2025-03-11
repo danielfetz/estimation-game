@@ -1,7 +1,8 @@
 import React from 'react';
 import { gameCategories } from '../data/questions';
+import { Trophy } from 'lucide-react';
 
-const GameSelector = ({ onSelectGame }) => {
+const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
   return (
     <div className="space-y-8">
       <header className="text-center">
@@ -18,17 +19,29 @@ const GameSelector = ({ onSelectGame }) => {
             {category.games.map((game) => (
               <div 
                 key={game.id} 
-                className="border rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden cursor-pointer"
-                onClick={() => onSelectGame(category.id, game.id)}
+                className="border rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden"
               >
                 <div className="p-5">
                   <h3 className="text-xl font-semibold mb-2">{game.name}</h3>
                   <p className="text-gray-600 mb-4">{game.description}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">{game.questions.length} questions</span>
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition">
-                      Play Game
-                    </button>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => onViewLeaderboard(category.id, game.id)}
+                        className="flex items-center bg-gray-200 text-gray-700 px-3 py-2 rounded-md text-sm hover:bg-gray-300 transition"
+                      >
+                        <Trophy size={16} className="mr-1" />
+                        Leaderboard
+                      </button>
+                      
+                      <button
+                        onClick={() => onSelectGame(category.id, game.id)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition"
+                      >
+                        Play Game
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
