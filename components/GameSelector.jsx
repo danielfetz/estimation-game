@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { gameCategories } from '../data/questions';
-import { Trophy, Star, Calendar, Clock, Lock } from 'lucide-react';
+import { Trophy, Star, Calendar, Clock, Lock, Users } from 'lucide-react';
+import supabase from '../lib/supabase';
 
 const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
   // States for dynamic game status
-  const [gameStatuses, setGameStatuses] = useState({}); // Tracks availability and featured status
-  const [countdown, setCountdown] = useState(null); // For the next game preview
-  const [nextUpcomingGame, setNextUpcomingGame] = useState(null); // The next game to be released
+  const [gameStatuses, setGameStatuses] = useState({});
+  const [countdown, setCountdown] = useState(null);
+  const [nextUpcomingGame, setNextUpcomingGame] = useState(null);
+  const [playerCounts, setPlayerCounts] = useState({});
+  const [loading, setLoading] = useState(true);
   
   // Function to format date as "Month Day"
   const formatDate = (dateString) => {
@@ -14,8 +17,68 @@ const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   };
+
+  // Fetch player counts for all games
+  useEffect(() => {
+    const fetchPlayerCounts = async () => {
+      try {
+        setLoading(true);
+        
+        // Find current featured game
+        let featuredGame = null;
+        let featuredCategory = null;
+        
+        gameCategories.forEach(category => {
+          category.games.forEach(game => {
+            if (game.featured) {
+              featuredGame = game;
+              featuredCategory = category;
+            }
+          });
+        });
+        
+        if (featuredGame) {
+          // Get today's date in ISO format without time
+          const today = new Date().toISOString().split('T')[0];
+          
+          // Fetch leaderboard entries for the featured game from today
+          const { data, error } = await supabase
+            .from('leaderboard')
+            .select('id')
+            .eq('categoryId', featuredCategory.id)
+            .eq('gameId', featuredGame.id)
+            .gte('date', today); // From today onwards
+            
+          if (error) {
+            throw error;
+          }
+          
+          // Calculate unique player count (some players might have multiple entries)
+          const uniquePlayers = new Set();
+          if (data) {
+            data.forEach(entry => uniquePlayers.add(entry.id));
+          }
+          
+          // Update player counts
+          setPlayerCounts({
+            [`${featuredCategory.id}-${featuredGame.id}`]: uniquePlayers.size || 0
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching player counts:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchPlayerCounts();
+    
+    // Refresh player counts every minute
+    const interval = setInterval(fetchPlayerCounts, 60000);
+    return () => clearInterval(interval);
+  }, []);
   
-  // Initialize and manage game statuses
+  // Initialize and manage game statuses (countdown timer logic remains the same)
   useEffect(() => {
     const updateGameStatuses = () => {
       const now = new Date();
@@ -125,6 +188,7 @@ const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
                 const status = gameStatuses[gameKey] || { available: true, featured: !!game.featured };
                 const isAvailable = status.available;
                 const isFeatured = status.featured;
+                const playerCount = playerCounts[gameKey] || 0;
                 
                 // Coming soon preview - only show if it's the next upcoming game
                 const isComingSoonPreview = 
@@ -190,6 +254,26 @@ const GameSelector = ({ onSelectGame, onViewLeaderboard }) => {
                             <div className="bg-white rounded p-2">
                               <span className="text-xl font-bold text-purple-800">{String(countdown.seconds).padStart(2, '0')}</span>
                               <p className="text-xs text-purple-600">Seconds</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Display player count for featured game */}
+                      {isFeatured && (
+                        <div className="mb-4 bg-yellow-100 p-3 rounded-md">
+                          <p className="font-medium text-yellow-900 mb-1">Players Today:</p>
+                          <div className="flex justify-center items-center">
+                            <div className="bg-white rounded p-2 px-6">
+                              <span className="text-xl font-bold text-yellow-800">
+                                {loading ? '...' : playerCount}
+                              </span>
+                              <div className="flex items-center justify-center mt-1">
+                                <Users size={14} className="text-yellow-600 mr-1" />
+                                <p className="text-xs text-yellow-600">
+                                  {playerCount === 1 ? 'Player' : 'Players'}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>
