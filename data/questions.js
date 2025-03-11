@@ -51,49 +51,6 @@ export const gameCategories = [
         ]
       },
       {
-        id: 'austria',
-        name: 'Austria in WWII',
-        description: 'Estimate key statistics about Austria during World War II',
-        addedDate: '2025-03-10',
-        questions: [
-          {
-            id: 1,
-            text: "How many Austrians served in the German Wehrmacht during World War II?",
-            answer: 1300000,
-            unit: "soldiers",
-            context: "Approximately 1.3 million Austrians served in the German armed forces after the Anschluss (annexation) in 1938."
-          },
-          {
-            id: 2,
-            text: "How many Austrian Jews were killed during the Holocaust?",
-            answer: 65000,
-            unit: "people",
-            context: "About 65,000 Austrian Jews were killed during the Holocaust, representing around one-third of Austria's pre-war Jewish population."
-          },
-          {
-            id: 3,
-            text: "How many tons of bombs were dropped on Austria by Allied forces?",
-            answer: 79000,
-            unit: "tons",
-            context: "Allied forces dropped approximately 79,000 tons of bombs on Austria, with Vienna being the primary target of these air raids."
-          },
-          {
-            id: 4,
-            text: "What was the number of Austrian civilians killed by Allied bombing?",
-            answer: 24000,
-            unit: "people",
-            context: "About 24,000 Austrian civilians lost their lives due to Allied bombing campaigns during the war."
-          },
-          {
-            id: 5,
-            text: "How many Austrians were executed for resistance activities against the Nazi regime?",
-            answer: 2700,
-            unit: "people",
-            context: "Approximately 2,700 Austrians were executed for their resistance activities against the Nazi regime, with thousands more sent to concentration camps."
-          }
-        ]
-      },
-      {
         id: 'liechtenstein-ww2',
         name: 'Liechtenstein in WWII',
         description: 'Explore the unique position of this tiny principality during World War II',
@@ -134,6 +91,49 @@ export const gameCategories = [
             answer: 239,
             unit: "people",
             context: "Records show that 239 Liechtenstein citizens or residents joined the Nazi Party, representing about 2% of the population at that time."
+          }
+        ]
+      },
+      {
+        id: 'austria',
+        name: 'Austria in WWII',
+        description: 'Estimate key statistics about Austria during World War II',
+        addedDate: '2025-03-10',
+        questions: [
+          {
+            id: 1,
+            text: "How many Austrians served in the German Wehrmacht during World War II?",
+            answer: 1300000,
+            unit: "soldiers",
+            context: "Approximately 1.3 million Austrians served in the German armed forces after the Anschluss (annexation) in 1938."
+          },
+          {
+            id: 2,
+            text: "How many Austrian Jews were killed during the Holocaust?",
+            answer: 65000,
+            unit: "people",
+            context: "About 65,000 Austrian Jews were killed during the Holocaust, representing around one-third of Austria's pre-war Jewish population."
+          },
+          {
+            id: 3,
+            text: "How many tons of bombs were dropped on Austria by Allied forces?",
+            answer: 79000,
+            unit: "tons",
+            context: "Allied forces dropped approximately 79,000 tons of bombs on Austria, with Vienna being the primary target of these air raids."
+          },
+          {
+            id: 4,
+            text: "What was the number of Austrian civilians killed by Allied bombing?",
+            answer: 24000,
+            unit: "people",
+            context: "About 24,000 Austrian civilians lost their lives due to Allied bombing campaigns during the war."
+          },
+          {
+            id: 5,
+            text: "How many Austrians were executed for resistance activities against the Nazi regime?",
+            answer: 2700,
+            unit: "people",
+            context: "Approximately 2,700 Austrians were executed for their resistance activities against the Nazi regime, with thousands more sent to concentration camps."
           }
         ]
       },
