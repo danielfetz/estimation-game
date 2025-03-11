@@ -91,6 +91,51 @@ export const gameCategories = [
             context: "Approximately 2,700 Austrians were executed for their resistance activities against the Nazi regime, with thousands more sent to concentration camps."
           }
         ]
+      },
+      {
+        id: 'liechtenstein-ww2',
+        name: 'Liechtenstein in WWII',
+        description: 'Explore the unique position of this tiny principality during World War II',
+        comingSoon: true, // Flag to indicate this game isn't playable yet
+        releaseDate: '2025-03-12T09:00:00Z', // Released tomorrow at 9am UTC
+        addedDate: '2025-03-12',
+        questions: [
+          {
+            id: 1,
+            text: "How many refugees were granted asylum in Liechtenstein during World War II?",
+            answer: 406,
+            unit: "refugees",
+            context: "Liechtenstein granted asylum to 406 refugees during WWII. Despite its small size, this represented a significant humanitarian effort for the principality."
+          },
+          {
+            id: 2,
+            text: "How many Liechtenstein citizens served in the Swiss Army during World War II?",
+            answer: 125,
+            unit: "soldiers",
+            context: "Around 125 Liechtenstein citizens served in the Swiss Army during WWII, as Liechtenstein had no army of its own but had close military cooperation with Switzerland."
+          },
+          {
+            id: 3,
+            text: "How many times was Liechtenstein's neutrality violated by air during WWII?",
+            answer: 7,
+            unit: "incidents",
+            context: "Liechtenstein's neutrality was violated 7 times by Allied aircraft. These were considered accidental overflights or navigation errors."
+          },
+          {
+            id: 4,
+            text: "What was the percentage decline in Liechtenstein's economy during the early war years (1939-1941)?",
+            answer: 18,
+            unit: "percent",
+            context: "The Liechtenstein economy contracted by approximately 18% during the early war years, primarily due to disruption of trade with neighbors and wartime restrictions."
+          },
+          {
+            id: 5,
+            text: "How many Liechtenstein citizens or residents were documented as having joined the Nazi Party?",
+            answer: 239,
+            unit: "people",
+            context: "Records show that 239 Liechtenstein citizens or residents joined the Nazi Party, representing about 2% of the population at that time."
+          }
+        ]
       }
     ]
   },
